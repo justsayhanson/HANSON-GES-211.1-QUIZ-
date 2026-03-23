@@ -1,0 +1,3130 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hanson's Quiz</title>
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(-45deg, #f3ec78, #af4261, #43cea2, #185a9d);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+  padding: 20px;
+  text-align: center;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+.quiz-container, .intro {
+  max-width: 700px;
+  margin: auto;
+  background: rgba(0, 0, 0, 0.6);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 1s ease;
+  color: #fff;
+}
+.quiz-container { display: none; }
+@keyframes fadeIn { from {opacity: 0; transform: translateY(20px);} to {opacity: 1; transform: translateY(0);} }
+.intro h1 {
+  font-size: 28px; font-weight: bold; margin-bottom: 10px;
+  background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.question { font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #fff; }
+.options button {
+  display: block; width: 100%; padding: 12px; margin: 8px 0;
+  border: none; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff; font-size: 16px; cursor: pointer;
+  transition: all 0.3s ease;
+}
+.options button:hover { background: rgba(255, 255, 255, 0.35); transform: scale(1.03); }
+.option.selected { background: linear-gradient(135deg, #43cea2, #185a9d); border: 2px solid #fff; }
+#next-btn, #prev-btn, #submit-btn, #start-btn, #restart-btn, #passcode-btn {
+  margin-top: 20px; padding: 14px 24px;
+  border: none; border-radius: 30px;
+  cursor: pointer; font-size: 16px; font-weight: 600;
+  background: linear-gradient(135deg, #ff9a9e, #fad0c4); color: #333;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: all 0.3s ease;
+  width: 95%; max-width: 500px;
+}
+#next-btn:hover, #prev-btn:hover, #submit-btn:hover,
+#start-btn:hover, #restart-btn:hover, #passcode-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+@keyframes pulse { 0%{transform:scale(1);} 50%{transform:scale(1.15);} 100%{transform:scale(1);} }
+#start-btn, #begin-btn, #restart-btn {
+  animation: pulse 1.5s infinite;
+  font-size: 22px;
+  padding: 20px 40px;
+  border-radius: 35px;
+  background: linear-gradient(135deg, #ff512f, #dd2476);
+  color: #fff; border: none; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+.progress-container {
+  width: 100%; background: rgba(255,255,255,0.2);
+  border-radius: 15px; margin-bottom: 15px;
+  height: 20px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #ff512f, #dd2476);
+  color: white; font-size: 12px; line-height: 20px;
+  border-radius: 15px; text-align: center;
+  transition: width 0.5s ease-in-out;
+}
+.review {
+  margin-top: 20px; padding: 15px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px; text-align: left;
+  font-size: 14px; color: #fff;
+}
+#timer {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 15px;
+  color: #43cea2;
+  text-shadow: 0 0 10px #43cea2, 0 0 20px #43cea2;
+  transition: all 0.5s ease;
+}
+#timer.warning {
+  color: #ff4d4d;
+  text-shadow: 0 0 10px #ff4d4d, 0 0 20px #ff4d4d;
+  animation: pulse 1s infinite;
+}
+</style>
+</head>
+<body>
+
+<!-- PASSCODE SCREEN -->
+<div class="intro" id="passcode-screen">
+  <h1>🔒 Secure Access</h1>
+  <p>Enter Passcode to continue</p>
+  <div style="display:flex; align-items:center; justify-content:center; width:95%; max-width:500px;
+    margin:auto; border-radius:12px; overflow:hidden; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+    <input type="password" id="passcode" placeholder="Enter passcode"
+           style="flex:1; padding:18px; font-size:20px; border:none; outline:none; background:transparent; color:#fff;" />
+    <button id="toggle-pass"
+            style="padding:18px; border:none; background:rgba(255,255,255,0.2); color:#fff; cursor:pointer; font-size:20px;">👁</button>
+  </div>
+  <br>
+  <button id="passcode-btn">Unlock</button>
+  <p id="passcode-error" style="color:red; display:none; margin-top:10px;">❌ Wrong passcode, try again!</p>
+</div>
+
+<!-- INTRO PAGE -->
+<div class="intro" id="intro">
+  <h1>GES ENTREPRENEURSHIP AND BUSINESS INNOVATION QUIZ</h1>
+  <p style="font-style: italic; font-size: 14px;">By Hanson Solomon Michael (Law Faculty 200L)</p>
+  <br>
+  <input type="text" id="playerName" placeholder="Enter your aaaaname"
+         style="padding:14px; font-size:18px; border-radius:12px; border:none; width:95%; max-width:500px;" />
+  <br><br>
+  <button id="start-btn">Start Quiz</button>
+</div>
+
+<!-- QUIZ PAGE -->
+<div class="quiz-container" id="quiz-container">
+  <div id="timer">30:00</div>
+  <div class="progress-container"><div class="progress-bar" id="progress-bar">0%</div></div>
+  <div id="question-info"></div>
+  <div id="quiz"></div>
+  <button id="prev-btn">Previous</button>
+  <button id="next-btn" disabled>Next</button>
+  <button id="submit-btn" disabled style="display:none;">Submit</button>
+  <div id="result"></div>
+</div>
+
+<script>
+const questionsBank = [
+  {
+    question: "Q1: What is the primary difference between an entrepreneur and an intrapreneur?",
+    options: [
+      "(A) Entrepreneurs innovate within companies; intrapreneurs create external ventures",
+      "(B) Entrepreneurs take personal risks; intrapreneurs use organizational resources",
+      "(C) Entrepreneurs work for organizations; intrapreneurs work independently",
+      "(D) Entrepreneurs rely on company funding; intrapreneurs seek venture capital"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q2: Which of the following best defines entrepreneurship?",
+    options: [
+      "(A) Managing a large company",
+      "(B) Operating within organizational frameworks",
+      "(C) Creating new businesses by identifying opportunities",
+      "(D) Implementing established strategies in startups"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q3: An intrapreneur is most likely to:",
+    options: [
+      "(A) Start a new company",
+      "(B) Lead innovation within an organization",
+      "(C) Focus solely on profits",
+      "(D) Avoid taking risks"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q4: Which of the following is NOT a characteristic of an entrepreneur?",
+    options: [
+      "(A) Risk-taking",
+      "(B) Dependence on a single employer",
+      "(C) Innovation",
+      "(D) Opportunity recognition"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q5: What is a key advantage of intrapreneurship for organizations?",
+    options: [
+      "(A) Reduced competition in the market",
+      "(B) Improved employee retention through empowerment",
+      "(C) Increased focus on traditional practices",
+      "(D) Elimination of risks"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q6: The term 'intrapreneur' was first popularized by:",
+    options: [
+      "(A) Joseph Schumpeter",
+      "(B) Gifford Pinchot",
+      "(C) Peter Drucker",
+      "(D) Elon Musk"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q7: Which skill is most critical for both entrepreneurs and intrapreneurs?",
+    options: [
+      "(A) Accounting",
+      "(B) Creativity and innovation",
+      "(C) Routine task management",
+      "(D) Investment banking"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q8: What is the primary motivation for entrepreneurs?",
+    options: [
+      "(A) Avoiding risks",
+      "(B) High salaries",
+      "(C) Creating value and addressing gaps in the market",
+      "(D) Following organizational rules"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q9: An example of intrapreneurship is:",
+    options: [
+      "(A) Launching a personal startup",
+      "(B) Developing a new product within a tech company",
+      "(C) Investing in the stock market",
+      "(D) Acquiring a competitor"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q10: Which of these best represents an entrepreneurial mindset?",
+    options: [
+      "(A) Maintaining the status quo",
+      "(B) Seeking stability over innovation",
+      "(C) Adapting to change and identifying opportunities",
+      "(D) Preferring routine over challenges"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q11: Which of the following is a challenge entrepreneurs face?",
+    options: [
+      "(A) Access to established organizational support",
+      "(B) High risks and uncertainty",
+      "(C) Lack of innovation",
+      "(D) Delegating tasks to intrapreneurs"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q12: What distinguishes social entrepreneurship from traditional entrepreneurship?",
+    options: [
+      "(A) Focus on profit maximization",
+      "(B) Prioritizing social and environmental impact",
+      "(C) Limited financial risks",
+      "(D) Operating exclusively online"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q13: An intrapreneur is most likely to report to:",
+    options: [
+      "(A) External investors",
+      "(B) A senior manager or executive",
+      "(C) A personal mentor",
+      "(D) No one, they are independent"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q14: Entrepreneurs often face financial risks because:",
+    options: [
+      "(A) They rely on personal savings",
+      "(B) Organizations fund their projects",
+      "(C) They rely on loans and external partnerships",
+      "(D) They avoid innovation"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q15: Intrapreneurship is encouraged in organizations to:",
+    options: [
+      "(A) Increase bureaucracy",
+      "(B) Limit employee creativity",
+      "(C) Drive innovation and competitiveness",
+      "(D) Focus only on external partnerships"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q16: What is the first step in the entrepreneurial process?",
+    options: [
+      "(A) Risk evaluation",
+      "(B) Hiring a team",
+      "(C) Securing funding",
+      "(D) Opportunity identification"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q17: Intrapreneurs primarily benefit from:",
+    options: [
+      "(A) Personal freedom",
+      "(B) The organization's resources and networks",
+      "(C) Ownership of the company",
+      "(D) Venture capital funding"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q18: The primary focus of entrepreneurship is to:",
+    options: [
+      "(A) Stabilize existing markets",
+      "(B) Develop new products or services",
+      "(C) Avoid risks while innovating",
+      "(D) Build hierarchical organizations"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q19: A business incubator is typically used by:",
+    options: [
+      "(A) Intrapreneurs within large corporations",
+      "(B) Entrepreneurs to develop their startups",
+      "(C) Managers in traditional roles",
+      "(D) Governments to regulate industries"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q20: Which personality trait is essential for both entrepreneurs and intrapreneurs?",
+    options: [
+      "(A) Risk aversion",
+      "(B) Creativity and resilience",
+      "(C) Preference for routine",
+      "(D) Avoidance of challenges"
+    ],
+    answer: 1
+  },
+
+  {
+    question: "Q21: Which theory of entrepreneurship emphasizes innovation as the central activity?",
+    options: [
+      "(A) Schumpeter's Theory",
+      "(B) McClelland’s Theory",
+      "(C) Kirzner's Theory",
+      "(D) Weber's Social Ethic Theory"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q22: What is the primary focus of psychological theories of entrepreneurship?",
+    options: [
+      "(A) Social values",
+      "(B) Personal traits",
+      "(C) Economic systems",
+      "(D) Government policies"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q23: The concept of 'alertness to opportunities' is associated with:",
+    options: [
+      "(A) Schumpeter",
+      "(B) Kirzner",
+      "(C) Weber",
+      "(D) McClelland"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q24: Entrepreneurship contributes to economic development through:",
+    options: [
+      "(A) Risk avoidance",
+      "(B) Job creation",
+      "(C) Government spending",
+      "(D) International trade agreements"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q25: McClelland’s theory highlights which personality trait in entrepreneurship?",
+    options: [
+      "(A) Openness",
+      "(B) Need for achievement",
+      "(C) Assertiveness",
+      "(D) Resilience"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q26: Which of the following is a rationale for promoting entrepreneurship?",
+    options: [
+      "(A) Reduced taxation",
+      "(B) Social stability",
+      "(C) Improved job satisfaction",
+      "(D) Increased foreign loans"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q27: Schumpeter's theory identifies entrepreneurs as:",
+    options: [
+      "(A) Organizers of resources",
+      "(B) Innovators",
+      "(C) Opportunity seekers",
+      "(D) Risk-takers"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q28: What does Weber’s Social Ethic Theory suggest about entrepreneurship?",
+    options: [
+      "(A) It depends on government incentives",
+      "(B) It thrives in cultures that value hard work and thrift",
+      "(C) It is solely determined by economic resources",
+      "(D) It requires global collaboration"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q29: Which of the following is not a key relevance of entrepreneurship?",
+    options: [
+      "(A) Job creation",
+      "(B) Technology stagnation",
+      "(C) Poverty reduction",
+      "(D) Market expansion"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q30: Who proposed the 'Need for Achievement' theory?",
+    options: [
+      "(A) Kirzner",
+      "(B) Weber",
+      "(C) Schumpeter",
+      "(D) McClelland"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q31: The process of identifying a business opportunity is central to which theory?",
+    options: [
+      "(A) Economic Theory",
+      "(B) Kirzner's Alertness Theory",
+      "(C) Psychological Theory",
+      "(D) Social Network Theory"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q32: What is a major contribution of entrepreneurship to developing economies?",
+    options: [
+      "(A) Dependency on imports",
+      "(B) Technology innovation",
+      "(C) Trade deficits",
+      "(D) Reduced literacy rates"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q33: The sociological perspective of entrepreneurship emphasizes:",
+    options: [
+      "(A) Personal ambition",
+      "(B) Social environment",
+      "(C) Financial resources",
+      "(D) Technological skills"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q34: According to Schumpeter, the entrepreneur's role is to:",
+    options: [
+      "(A) Provide jobs",
+      "(B) Innovate",
+      "(C) Accumulate wealth",
+      "(D) Follow trends"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q35: Kirzner's theory contrasts with Schumpeter's by emphasizing:",
+    options: [
+      "(A) Competition",
+      "(B) Alertness",
+      "(C) Innovation",
+      "(D) Risk-taking"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q36: Entrepreneurship is most relevant for addressing:",
+    options: [
+      "(A) Political instability",
+      "(B) Social challenges",
+      "(C) Monetary policy",
+      "(D) Inflation"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q37: Which factor is essential in the Integrated Theory of entrepreneurship?",
+    options: [
+      "(A) Individual creativity",
+      "(B) Economic systems",
+      "(C) Environmental forces",
+      "(D) All of the above"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q38: Which of the following best describes a rationale for entrepreneurship?",
+    options: [
+      "(A) Reducing foreign competition",
+      "(B) Creating wealth",
+      "(C) Promoting government dependency",
+      "(D) Limiting technological advancement"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q39: The term 'locus of control' in entrepreneurship refers to:",
+    options: [
+      "(A) Belief in external factors",
+      "(B) Trust in government policies",
+      "(C) Internal belief in controlling outcomes",
+      "(D) Dependence on teamwork"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q40: Social Network Theory emphasizes:",
+    options: [
+      "(A) Independent decision-making",
+      "(B) Isolation from society",
+      "(C) Leveraging relationships for business success",
+      "(D) Avoiding competition"
+    ],
+    answer: 2
+  },
+
+  {
+    question: "Q41: Which of the following best describes an entrepreneurial environment?",
+    options: [
+      "(A) A setting where businesses struggle to compete",
+      "(B) A system that supports innovation and business growth",
+      "(C) A highly regulated market with limited business opportunities",
+      "(D) An informal network of unregistered businesses"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q42: Which of the following does NOT contribute to a supportive entrepreneurial environment?",
+    options: [
+      "(A) Access to capital",
+      "(B) High taxation rates",
+      "(C) Availability of skilled labor",
+      "(D) Supportive government policies"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q43: An entrepreneurial environment includes the following EXCEPT:",
+    options: [
+      "(A) Financial infrastructure",
+      "(B) Social and cultural norms",
+      "(C) Monopoly on business licenses",
+      "(D) Market access"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q44: The entrepreneurial environment is most influenced by:",
+    options: [
+      "(A) Climatic conditions",
+      "(B) Political stability and policy frameworks",
+      "(C) Historical factors",
+      "(D) Individual business owners' preferences"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q45: Government plays a significant role in entrepreneurship by:",
+    options: [
+      "(A) Increasing import tariffs",
+      "(B) Offering tax incentives and grants",
+      "(C) Discouraging foreign investments",
+      "(D) Limiting access to technology"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q46: Micro and small businesses are categorized based on:",
+    options: [
+      "(A) Annual profit",
+      "(B) Size of workforce and turnover",
+      "(C) Market share",
+      "(D) Type of ownership"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q47: The major contribution of micro and small businesses in an economy is:",
+    options: [
+      "(A) Dominating international markets",
+      "(B) Providing large-scale employment",
+      "(C) Offering goods and services at premium prices",
+      "(D) Creating monopolies"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q48: Which sector benefits the most from micro and small businesses?",
+    options: [
+      "(A) Manufacturing",
+      "(B) Service",
+      "(C) Agriculture",
+      "(D) All of the above"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q49: Micro and small businesses are significant in wealth creation because they:",
+    options: [
+      "(A) Focus on luxury products",
+      "(B) Redistribute resources across society",
+      "(C) Operate only in urban areas",
+      "(D) Have access to unlimited capital"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q50: What is the primary role of small businesses in financial independence?",
+    options: [
+      "(A) Allowing dependence on government grants",
+      "(B) Enabling self-reliance through income generation",
+      "(C) Reducing the need for international trade",
+      "(D) None of the above"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q51: Micro and small businesses contribute to employment generation by:",
+    options: [
+      "(A) Hiring only skilled labor",
+      "(B) Creating jobs at local levels",
+      "(C) Eliminating competition",
+      "(D) Paying minimum wages"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q52: Wealth creation by small businesses is achieved through:",
+    options: [
+      "(A) Hoarding profits",
+      "(B) Circulating income in the community",
+      "(C) Increasing inflation",
+      "(D) Restricting competition"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q53: A major barrier to wealth creation for small businesses is:",
+    options: [
+      "(A) Government subsidies",
+      "(B) Lack of access to credit",
+      "(C) Over-regulation",
+      "(D) Technology adoption"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q54: Which of these is an indirect impact of small businesses on employment?",
+    options: [
+      "(A) Reduced dependence on imports",
+      "(B) Enhanced supply chain activities",
+      "(C) Reduction in market size",
+      "(D) Increased foreign competition"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q55: Financial independence through small businesses is best promoted by:",
+    options: [
+      "(A) Government bailouts",
+      "(B) Profit reinvestment in expansion",
+      "(C) Importation of raw materials and credit",
+      "(D) Avoiding loans"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q56: The greatest challenge micro businesses face in developing economies is:",
+    options: [
+      "(A) High consumer demand",
+      "(B) Limited access to funding",
+      "(C) Excessive technology adoption",
+      "(D) Surplus of skilled labor"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q57: One opportunity for micro and small businesses in rural areas is:",
+    options: [
+      "(A) Urban migration",
+      "(B) Limited competition",
+      "(C) High taxation",
+      "(D) Poor infrastructure"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q58: How can technology aid small businesses in wealth creation?",
+    options: [
+      "(A) By increasing operational costs and competition",
+      "(B) By expanding market reach and efficiency",
+      "(C) By reducing the need for skilled labor",
+      "(D) By eliminating labor"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q59: A common characteristic of successful small businesses is:",
+    options: [
+      "(A) High employee turnover",
+      "(B) Strong adaptability to market changes",
+      "(C) Reliance on a single product",
+      "(D) Avoiding customer feedback"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q60: Which of the following best describes financial independence in the context of small businesses?",
+    options: [
+      "(A) Dependence on loans for survival",
+      "(B) Consistent generation of self-sustaining income",
+      "(C) Sole reliance on external investments",
+      "(D) Focus on high-risk ventures"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q61: What is entrepreneurial thinking primarily focused on?",
+    options: [
+      "(A) Administrative tasks",
+      "(B) Problem-solving and innovation",
+      "(C) Following instructions",
+      "(D) Avoiding risks"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q62: Which of the following is NOT a characteristic of an entrepreneurial mindset?",
+    options: [
+      "(A) Creativity",
+      "(B) Risk aversion",
+      "(C) Resilience",
+      "(D) Proactiveness"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q63: What does innovation in entrepreneurship mean?",
+    options: [
+      "(A) Copying existing ideas",
+      "(B) Improving or creating new products, services, or processes",
+      "(C) Ignoring customer needs",
+      "(D) Avoiding technology"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q64: Which of these best describes an entrepreneurial opportunity?",
+    options: [
+      "(A) A guaranteed success",
+      "(B) A gap or unmet need in the market",
+      "(C) A large amount of capital",
+      "(D) A high-risk venture"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q65: What is the primary goal of innovative entrepreneurship?",
+    options: [
+      "(A) Reducing costs only",
+      "(B) Creating unique value for customers",
+      "(C) Avoiding competition",
+      "(D) Following traditional business practices"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q66: Which of the following is an example of disruptive innovation?",
+    options: [
+      "(A) Incremental improvements to a product",
+      "(B) Introduction of smartphones",
+      "(C) Offering discounts on existing services",
+      "(D) Hiring more employees"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q67: Entrepreneurial thinking involves which type of decision-making?",
+    options: [
+      "(A) Linear and rigid",
+      "(B) Creative and adaptive",
+      "(C) Cautious and slow",
+      "(D) Bureaucratic"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q68: What is the relationship between risk and entrepreneurship?",
+    options: [
+      "(A) Entrepreneurs always avoid risks",
+      "(B) Entrepreneurs take calculated risks",
+      "(C) Entrepreneurs thrive on reckless risks",
+      "(D) Risk is irrelevant in entrepreneurship"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q69: Which of the following is NOT a key factor in entrepreneurial success?",
+    options: [
+      "(A) Innovation",
+      "(B) Market research",
+      "(C) Luck",
+      "(D) Strategic planning"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q70: What is a key difference between an entrepreneur and a manager?",
+    options: [
+      "(A) Entrepreneurs focus on innovation, while managers focus on operations",
+      "(B) Managers take risks, while entrepreneurs avoid them",
+      "(C) Entrepreneurs follow rules, while managers break them",
+      "(D) There is no difference"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q71: Which skill is most crucial for innovative entrepreneurs?",
+    options: [
+      "(A) Financial accounting",
+      "(B) Networking",
+      "(C) Critical thinking",
+      "(D) Marketing"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q72: What does design thinking contribute to entrepreneurship?",
+    options: [
+      "(A) A focus on avoiding competition",
+      "(B) A user-centered approach to problem-solving",
+      "(C) A method for avoiding business models",
+      "(D) A tool for risk minimization"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q73: Which of the following is an outcome of entrepreneurial thinking?",
+    options: [
+      "(A) Increased rigidity",
+      "(B) Stagnant business growth",
+      "(C) Creative solutions",
+      "(D) Avoidance of market challenges"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q74: What does a lean startup emphasize?",
+    options: [
+      "(A) Building a business with minimal resources",
+      "(B) Extensive business planning",
+      "(C) Avoiding customer feedback",
+      "(D) Immediate scaling"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q75: What is a business model canvas used for?",
+    options: [
+      "(A) Writing financial reports",
+      "(B) Visualizing key aspects of a business idea",
+      "(C) Avoiding competitive analysis",
+      "(D) None of the above"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q76: In entrepreneurship, what does pivoting mean?",
+    options: [
+      "(A) Continuing with the original idea regardless of outcomes",
+      "(B) Changing the direction of a business strategy based on feedback",
+      "(C) Stopping all business activities",
+      "(D) Increasing prices"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q77: Which of the following best describes intrapreneurship?",
+    options: [
+      "(A) Entrepreneurship outside the workplace",
+      "(B) Entrepreneurship within an existing organization",
+      "(C) A method for avoiding risks",
+      "(D) A type of startup"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q78: Why is customer feedback important in innovative entrepreneurship?",
+    options: [
+      "(A) It helps entrepreneurs adjust their offerings to meet needs",
+      "(B) It discourages experimentation",
+      "(C) It is irrelevant",
+      "(D) It minimizes profits"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q79: What is the primary benefit of building a diverse entrepreneurial team?",
+    options: [
+      "(A) Faster decision-making",
+      "(B) Access to various perspectives and skills",
+      "(C) Avoiding conflicts",
+      "(D) Lower operating costs"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q80: Which of the following is an example of social entrepreneurship?",
+    options: [
+      "(A) Developing a luxury fashion brand",
+      "(B) Creating a sustainable energy solution for rural areas",
+      "(C) Opening a new restaurant chain",
+      "(D) None of the above"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q81: What is the primary focus of innovation?",
+    options: [
+      "(A) Maintaining traditions",
+      "(B) Adding value",
+      "(C) Following competition",
+      "(D) Eliminating competition"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q82: Which type of innovation involves the improvement of delivery methods?",
+    options: [
+      "(A) Product Innovation",
+      "(B) Process Innovation",
+      "(C) Business Model Innovation",
+      "(D) Market Innovation"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q83: The introduction of a new good or service is an example of:",
+    options: [
+      "(A) Product Innovation",
+      "(B) Process Innovation",
+      "(C) Market Innovation",
+      "(D) Incremental Innovation"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q84: What is a key driver of innovation?",
+    options: [
+      "(A) Resistance to change",
+      "(B) Lack of competition",
+      "(C) Globalization",
+      "(D) Over-regulation"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q85: Which of the following is NOT a component of an innovation-driven entrepreneurial ecosystem?",
+    options: [
+      "(A) Entrepreneurs",
+      "(B) Government",
+      "(C) Research Institutions",
+      "(D) Traditional Markets"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q86: What role do universities play in an entrepreneurial ecosystem?",
+    options: [
+      "(A) Regulatory oversight",
+      "(B) Talent and knowledge providers",
+      "(C) Risk management",
+      "(D) Resource extraction"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q87: In an IDEE, tolerance for failure is considered a:",
+    options: [
+      "(A) Barrier to entry",
+      "(B) Critical characteristic",
+      "(C) Minor factor",
+      "(D) Deterrent"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q88: The transformation of a company's value delivery approach is called:",
+    options: [
+      "(A) Product Innovation",
+      "(B) Business Model Innovation",
+      "(C) Incremental Innovation",
+      "(D) Radical Innovation"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q89: Which factor is most important for collaboration in an IDEE?",
+    options: [
+      "(A) Competitive rivalry",
+      "(B) Synergy among stakeholders",
+      "(C) Strict regulations",
+      "(D) High barriers to entry"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q90: Incremental innovation refers to:",
+    options: [
+      "(A) Small but continuous improvements",
+      "(B) Radical breakthroughs",
+      "(C) Copying existing ideas",
+      "(D) Disrupting the market"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q91: Which of the following is an example of cultural support in an IDEE?",
+    options: [
+      "(A) Low taxes",
+      "(B) Availability of venture capital",
+      "(C) A society that celebrates risk-taking",
+      "(D) Government subsidies"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q92: An essential infrastructure for an IDEE includes:",
+    options: [
+      "(A) Bureaucratic offices",
+      "(B) High-speed internet",
+      "(C) Traditional retail stores",
+      "(D) Closed communication channels"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q93: What type of innovation disrupts existing markets significantly?",
+    options: [
+      "(A) Incremental Innovation",
+      "(B) Radical Innovation",
+      "(C) Process Innovation",
+      "(D) Market Innovation"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q94: What is the role of government in an entrepreneurial ecosystem?",
+    options: [
+      "(A) Limiting entrepreneurial activities",
+      "(B) Providing funding and creating policies",
+      "(C) Eliminating private investors",
+      "(D) Replacing universities"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q95: Which of the following is NOT a characteristic of successful IDEE?",
+    options: [
+      "(A) Collaboration system",
+      "(B) Isolation of stakeholders",
+      "(C) Access to funding",
+      "(D) Strong education system"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q96: An entrepreneurial ecosystem thrives on:",
+    options: [
+      "(A) Fragmented interaction",
+      "(B) Synergy and support",
+      "(C) Overregulation",
+      "(D) Minimal interaction"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q97: What is a major barrier to innovation?",
+    options: [
+      "(A) Technological advancement",
+      "(B) Resistance to change",
+      "(C) Access to education",
+      "(D) Market demand"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q98: The study of entrepreneurial ecosystems primarily focuses on:",
+    options: [
+      "(A) Eliminating business models",
+      "(B) Networks of interconnected stakeholders",
+      "(C) Corporate governance",
+      "(D) Market segments"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q99: Market innovation targets:",
+    options: [
+      "(A) Improved products",
+      "(B) Existing customer segments",
+      "(C) New markets or customer bases",
+      "(D) Reduced competition"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q100: A characteristic of a successful innovation culture is:",
+    options: [
+      "(A) Avoiding risks",
+      "(B) Embracing experimentation",
+      "(C) Limiting new ideas",
+      "(D) Strict hierarchies"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q101: Which of the following is NOT a type of business innovation?",
+    options: [
+      "(A) Product Innovation",
+      "(B) Process Innovation",
+      "(C) Distribution Innovation",
+      "(D) Personality Innovation"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q102: What does incremental innovation mean in a business context?",
+    options: [
+      "(A) Small improvements to existing products or processes",
+      "(B) Introduction of entirely new products",
+      "(C) Copying competitors' ideas",
+      "(D) Disrupting entire industries"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q103: Which of these is an example of disruptive innovation?",
+    options: [
+      "(A) A better version of an existing smartphone",
+      "(B) The creation of a ride-hailing app like Uber",
+      "(C) A new flavor of soda",
+      "(D) Faster customer service in a bank"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q104: In business innovation, the term open innovation refers to:",
+    options: [
+      "(A) Innovation within a closed team",
+      "(B) Using external ideas and collaboration to drive innovation",
+      "(C) Innovations that require no intellectual property protection",
+      "(D) Rapid prototyping methods"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q105: A business model innovation focuses primarily on:",
+    options: [
+      "(A) Designing a new product",
+      "(B) Changing how a company delivers value to customers",
+      "(C) Increasing production capacity",
+      "(D) Improving marketing strategies"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q106: What is the primary purpose of a science and technology park?",
+    options: [
+      "(A) Providing recreational activities for scientists",
+      "(B) Facilitating collaboration between academia, government, and industry",
+      "(C) Housing startups with no university affiliations",
+      "(D) Offering tax breaks to all types of businesses"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q107: Which of these is a key characteristic of science parks?",
+    options: [
+      "(A) Isolation from urban areas",
+      "(B) Strong linkages to research institutions",
+      "(C) Focus only on manufacturing",
+      "(D) Primarily government-owned companies"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q108: The first science park in the world was established in:",
+    options: [
+      "(A) Silicon Valley, USA",
+      "(B) Cambridge, UK",
+      "(C) Tsukuba, Japan",
+      "(D) Bangalore, India"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q109: Which sector benefits the most from science and technology parks?",
+    options: [
+      "(A) Retail",
+      "(B) Information and Communication Technology (ICT)",
+      "(C) Agriculture",
+      "(D) Real Estate"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q110: One major benefit of science parks is:",
+    options: [
+      "(A) Reduced competition among companies",
+      "(B) Accelerated commercialization of research",
+      "(C) Isolation from global markets",
+      "(D) Focus on traditional industries"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q111: Technopreneurship is best defined as:",
+    options: [
+      "(A) Entrepreneurship in the tech industry",
+      "(B) Using technology as a tool for business development",
+      "(C) Technological investment in large companies",
+      "(D) Innovation without profit motives"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q112: A key trait of a successful technopreneur is:",
+    options: [
+      "(A) Avoidance of risks",
+      "(B) Strong technical and business knowledge",
+      "(C) Dependence on external funding",
+      "(D) Focus only on local markets"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q113: What is the primary goal of a technopreneur?",
+    options: [
+      "(A) To become a scientist",
+      "(B) To solve problems using technology and generate revenue",
+      "(C) To invest in traditional businesses",
+      "(D) To limit technology adoption"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q114: Which of the following is an example of technopreneurship?",
+    options: [
+      "(A) A tech startup creating apps for education",
+      "(B) A retail shop adopting point-of-sale systems",
+      "(C) A farmer using modern fertilizers",
+      "(D) A clothing brand using e-commerce"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q115: The lean startup methodology is particularly useful for technopreneurs because:",
+    options: [
+      "(A) It ensures instant profitability",
+      "(B) It emphasizes rapid prototyping and customer feedback",
+      "(C) It eliminates the need for market research",
+      "(D) It guarantees long-term success"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q116: What does R&D stand for in the context of innovation?",
+    options: [
+      "(A) Risk and Development",
+      "(B) Research and Development",
+      "(C) Review and Design",
+      "(D) Revenue and Deployment"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q117: Which of the following best describes an incubator?",
+    options: [
+      "(A) A shared workspace for startups to develop business ideas",
+      "(B) A large multinational-funded technology research center",
+      "(C) A high-tech manufacturing plant",
+      "(D) A government agency solely for corporations"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q118: A startup ecosystem typically includes:",
+    options: [
+      "(A) Universities, venture capitalists, and mentoring programs",
+      "(B) Only government agencies",
+      "(C) Large multinational corporations",
+      "(D) Solely technology developers"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q119: Technopreneurs often rely on cloud computing because:",
+    options: [
+      "(A) It eliminates the need for physical servers",
+      "(B) It guarantees higher profit margins",
+      "(C) It is a government-mandated technology",
+      "(D) It avoids customer interaction"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q120: Which of these funding options is most common for technopreneurs?",
+    options: [
+      "(A) Bootstrapping and venture capital",
+      "(B) Lottery winnings",
+      "(C) Government subsidies for agriculture",
+      "(D) Fixed deposits in banks"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q121: Which of the following is the primary goal of E-Business?",
+    options: [
+      "(A) To improve marketing strategies",
+      "(B) To integrate business processes with technology",
+      "(C) To create a social media presence",
+      "(D) To increase customer visits to physical stores"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q122: Which of these is an example of B2B E-Business?",
+    options: [
+      "(A) A person buying a book from an online store",
+      "(B) A wholesaler selling products to retailers via an online platform",
+      "(C) A company offering services to individuals through a mobile app",
+      "(D) A retailer offering goods to consumers on a website"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q123: What does the term 'E-Business model' refer to?",
+    options: [
+      "(A) The strategy used to attract customers online",
+      "(B) The technological infrastructure required to run an online business",
+      "(C) The approach businesses use to generate revenue through internet-based activities",
+      "(D) The software used to manage online sales"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q124: Which of the following is NOT a benefit of E-Business?",
+    options: [
+      "(A) Enhanced customer interaction",
+      "(B) Reduced operational costs",
+      "(C) Increased reliance on physical retail space",
+      "(D) Improved global reach"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q125: E-Commerce primarily involves transactions that take place:",
+    options: [
+      "(A) Offline",
+      "(B) Over the telephone",
+      "(C) On the internet",
+      "(D) Through physical retail stores"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q126: Which of the following is an example of C2C E-Commerce?",
+    options: [
+      "(A) A consumer purchasing a product from a retailer",
+      "(B) A company selling goods to another company",
+      "(C) A person selling used items to another individual on an online platform",
+      "(D) A government agency offering public services online"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q127: Which of the following is a common payment gateway used in E-Commerce?",
+    options: [
+      "(A) PayPal",
+      "(B) Email",
+      "(C) WhatsApp",
+      "(D) Zoom"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q128: Which of the following is a key challenge faced by E-Commerce businesses?",
+    options: [
+      "(A) Lack of online marketing strategies",
+      "(B) Building trust with customers",
+      "(C) High transaction volume",
+      "(D) Providing traditional customer service"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q129: What does the term 'FINTECH' refer to?",
+    options: [
+      "(A) Financial technologies used in banking",
+      "(B) A method of investing in financial markets",
+      "(C) A regulatory body for financial services",
+      "(D) The use of technology to improve financial services"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q130: Which of the following is a significant benefit of FINTECH?",
+    options: [
+      "(A) Limiting access to financial services",
+      "(B) Reducing transparency in financial transactions",
+      "(C) Enhancing financial inclusion",
+      "(D) Reducing financial regulation"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q131: Which of these is an example of a mobile payment system in FINTECH?",
+    options: [
+      "(A) E-wallets like PayPal",
+      "(B) Investment portfolios",
+      "(C) Loan management software",
+      "(D) Stock exchanges"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q132: Blockchain technology in FINTECH is primarily used for:",
+    options: [
+      "(A) Stock market analysis",
+      "(B) Securing financial transactions",
+      "(C) Creating financial regulations",
+      "(D) Reducing the cost of customer service"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q133: Which of the following is a potential risk associated with FINTECH?",
+    options: [
+      "(A) Enhanced customer privacy",
+      "(B) Increased transaction speed",
+      "(C) Cybersecurity threats",
+      "(D) Decreased transaction costs"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q134: Which of the following is the first step in the change management process?",
+    options: [
+      "(A) Implementing the change",
+      "(B) Planning the change",
+      "(C) Communicating the change to employees",
+      "(D) Identifying the need for change"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q135: What does Kotter's 8-Step Change Model focus on?",
+    options: [
+      "(A) Structuring the organization's goals",
+      "(B) Overcoming resistance to change",
+      "(C) Building a financial plan for change",
+      "(D) Improving employee skills"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q136: What is a common reason for resistance to change within an organization?",
+    options: [
+      "(A) Effective communication",
+      "(B) Fear of the unknown",
+      "(C) Increased training programs",
+      "(D) Strong leadership"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q137: Which of the following best describes 'Organizational Change'?",
+    options: [
+      "(A) The process of improving organizational efficiency without altering structures",
+      "(B) The adoption of new practices, policies, or behaviors in response to internal or external factors",
+      "(C) Reducing the number of employees",
+      "(D) Increasing organizational profits"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q138: What is 'Change Fatigue'?",
+    options: [
+      "(A) A situation where employees become resistant due to frequent changes",
+      "(B) A process of training employees to adapt to new technology",
+      "(C) The overall success of a change initiative",
+      "(D) The increased engagement of employees in change efforts"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q139: Which of the following is a tool used in Change Management to assess the impact of change on stakeholders?",
+    options: [
+      "(A) SWOT analysis",
+      "(B) Stakeholder analysis",
+      "(C) Brainstorming",
+      "(D) PESTLE analysis"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q140: Which of the following is a key success factor in managing change effectively?",
+    options: [
+      "(A) Avoiding communication with employees",
+      "(B) Involving employees in the change process",
+      "(C) Focusing on short-term goals only",
+      "(D) Implementing changes without feedback"
+    ],
+    answer: 1
+  },
+{
+    question: "Q141: Which of the following is the first step in starting a business?",
+    options: [
+      "(A) Registering the business",
+      "(B) Writing a business plan",
+      "(C) Obtaining financing",
+      "(D) Hiring employees"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q142: Which of these is a characteristic of a sole proprietorship?",
+    options: [
+      "(A) Separate legal identity from the owner",
+      "(B) Shared management control",
+      "(C) Unlimited liability for debts",
+      "(D) Limited liability for debts"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q143: What is the main advantage of a partnership?",
+    options: [
+      "(A) Limited liability",
+      "(B) Tax exemption",
+      "(C) Shared responsibility and resources",
+      "(D) Centralized control"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q144: Which form of enterprise is most suitable for large-scale businesses requiring significant capital investment?",
+    options: [
+      "(A) Sole proprietorship",
+      "(B) Partnership",
+      "(C) Limited Liability Company (LLC)",
+      "(D) Cooperative"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q145: What does LLC stand for?",
+    options: [
+      "(A) Limited Liability Corporation",
+      "(B) Local Limited Company",
+      "(C) Limited Liability Company",
+      "(D) Large Liability Company"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q146: In which type of business structure do owners share profits and losses equally unless otherwise agreed?",
+    options: [
+      "(A) Sole proprietorship",
+      "(B) Partnership",
+      "(C) Corporation",
+      "(D) Franchise"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q147: What is the primary disadvantage of a sole proprietorship?",
+    options: [
+      "(A) Complex tax structure",
+      "(B) Limited control over decision-making",
+      "(C) Unlimited personal liability",
+      "(D) Difficulty in raising capital"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q148: Which business structure offers limited liability protection to its owners?",
+    options: [
+      "(A) Sole proprietorship",
+      "(B) Partnership",
+      "(C) Limited Liability Company (LLC)",
+      "(D) General partnership"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q149: A franchise agreement involves:",
+    options: [
+      "(A) Owning a business with no established brand",
+      "(B) Using an established business's brand and business model",
+      "(C) Forming a cooperative business with shared ownership",
+      "(D) Owning a business without liability"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q150: Which of the following is NOT a form of business enterprise?",
+    options: [
+      "(A) Sole proprietorship",
+      "(B) Corporation",
+      "(C) Limited Liability Partnership (LLP)",
+      "(D) Consumer cooperative"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q151: Which of the following is an advantage of a corporation?",
+    options: [
+      "(A) Flexibility in management",
+      "(B) Limited liability",
+      "(C) Simple tax structure",
+      "(D) Direct control by owners"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q152: What type of business is best suited for members who want to provide goods and services for their mutual benefit?",
+    options: [
+      "(A) Corporation",
+      "(B) Partnership",
+      "(C) Cooperative",
+      "(D) Sole proprietorship"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q153: Which of the following is a key feature of a cooperative business?",
+    options: [
+      "(A) Shared ownership and decision-making",
+      "(B) Single individual ownership",
+      "(C) Limited liability",
+      "(D) Public trading of shares"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q154: The legal document that outlines the responsibilities, rights, and obligations of partners in a business is called:",
+    options: [
+      "(A) Partnership agreement",
+      "(B) Memorandum of association",
+      "(C) Shareholder agreement",
+      "(D) Business charter"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q155: What is a significant drawback of a partnership?",
+    options: [
+      "(A) Limited capital",
+      "(B) The possibility of management disputes",
+      "(C) Difficulty in raising capital",
+      "(D) High tax rates"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q156: Which business structure requires the owners to file articles of incorporation with the government?",
+    options: [
+      "(A) Sole proprietorship",
+      "(B) Partnership",
+      "(C) Corporation",
+      "(D) Cooperative"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q157: Which business structure can issue shares of stock to raise capital?",
+    options: [
+      "(A) Sole proprietorship",
+      "(B) Partnership",
+      "(C) Corporation",
+      "(D) Franchise"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q158: Which of the following describes the liability of owners in a corporation?",
+    options: [
+      "(A) Owners have unlimited liability for the corporation's debts",
+      "(B) Owners are liable only up to the amount they invest",
+      "(C) Owners are not liable for any debts",
+      "(D) Owners are liable for half of the corporation's debts"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q159: In a limited liability partnership (LLP), who is liable for the debts of the business?",
+    options: [
+      "(A) The general partners only",
+      "(B) The limited partners only",
+      "(C) Both general and limited partners",
+      "(D) None of the partners are personally liable"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q160: What is the primary purpose of writing a business plan?",
+    options: [
+      "(A) To secure government funding",
+      "(B) To outline the goals and operations of the business",
+      "(C) To list the legal requirements for starting the business",
+      "(D) To attract employees to the business"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q161: What is the first step in setting up a small business in Nigeria?",
+    options: [
+      "(A) Registering with the Corporate Affairs Commission (CAC)",
+      "(B) Opening a business bank account",
+      "(C) Obtaining a Tax Identification Number (TIN)",
+      "(D) Identifying a target market"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q162: Which agency is responsible for registering businesses in Nigeria?",
+    options: [
+      "(A) Federal Inland Revenue Service (FIRS)",
+      "(B) Corporate Affairs Commission (CAC)",
+      "(C) Small and Medium Enterprises Development Agency of Nigeria (SMEDAN)",
+      "(D) National Agency for Food and Drug Administration and Control (NAFDAC)"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q163: What is required for registering a business name with the CAC?",
+    options: [
+      "(A) Proof of citizenship",
+      "(B) Business plan",
+      "(C) A minimum capital requirement",
+      "(D) Unique business name"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q164: Which of the following is a necessary document for registering a limited liability company in Nigeria?",
+    options: [
+      "(A) Memorandum and Articles of Association",
+      "(B) Tax clearance certificate",
+      "(C) Letter of recommendation from a bank",
+      "(D) Business permit"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q165: Which of the following is not typically required when setting up a small business in Nigeria?",
+    options: [
+      "(A) Business name registration",
+      "(B) Opening a business bank account",
+      "(C) Employment of at least 10 staff",
+      "(D) Obtaining a Tax Identification Number (TIN)"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q166: To obtain a Tax Identification Number (TIN) in Nigeria, which agency should be contacted?",
+    options: [
+      "(A) Federal Inland Revenue Service (FIRS)",
+      "(B) Corporate Affairs Commission (CAC)",
+      "(C) National Industrial Court (NIC)",
+      "(D) Nigerian Investment Promotion Commission (NIPC)"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q167: Which of the following licenses might a small business in Nigeria need to obtain?",
+    options: [
+      "(A) Import/export license",
+      "(B) NAFDAC registration for food and drugs",
+      "(C) Business operating permit",
+      "(D) All of the above"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q168: Which law governs the registration and operation of businesses in Nigeria?",
+    options: [
+      "(A) Nigerian Companies Act",
+      "(B) Companies and Allied Matters Act (CAMA)",
+      "(C) National Business Registration Act",
+      "(D) Nigerian Business Code"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q169: What is the minimum number of directors required to set up a limited liability company in Nigeria?",
+    options: [
+      "(A) One",
+      "(B) Two",
+      "(C) Three",
+      "(D) Four"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q170: Which of the following is required by the Nigerian tax authorities for businesses with employees?",
+    options: [
+        "(A) Filing of annual tax returns",
+        "(B) Payment of VAT",
+        "(C) Registration with the National Social Insurance Trust Fund (NSITF)",
+        "(D) All of the above"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q171: What type of business structure is the easiest to register?",
+    options: [
+        "(A) Limited liability company",
+        "(B) Sole proprietorship",
+        "(C) Partnership",
+        "(D) Cooperative"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q172: Which of the following is a key consideration when writing a business plan for a small business in Nigeria?",
+    options: [
+        "(A) Choosing a business name",
+        "(B) Identifying the target market",
+        "(C) Registering for tax",
+        "(D) Obtaining the business permit"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q173: Which government body regulates the establishment of small businesses in Nigeria?",
+    options: [
+        "(A) Federal Ministry of Industry, Trade, and Investment",
+        "(B) Nigerian Investment Promotion Commission (NIPC)",
+        "(C) Corporate Affairs Commission (CAC)",
+        "(D) National Board for Technology Incubation"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q174: When applying for a business name in Nigeria, which of the following should be provided?",
+    options: [
+        "(A) A passport photo",
+        "(B) Proof of tax payment",
+        "(C) Two proposed business names",
+        "(D) Business office location"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q175: What does the acronym SMEDAN stand for?",
+    options: [
+        "(A) Small and Medium Enterprises Development Agency of Nigeria",
+        "(B) Small and Micro Enterprise Agency of Nigeria",
+        "(C) Small and Modern Enterprise Development Agency of Nigeria",
+        "(D) None of the above"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q176: What is the function of the Nigerian Export Promotion Council (NEPC)?",
+    options: [
+        "(A) Issuing business permits",
+        "(B) Facilitating export-related services and support",
+        "(C) Regulating foreign investment",
+        "(D) Providing business loans"
+    ],
+    answer: 1
+  },
+  {
+    question: "Q177: Which document is essential for conducting business with the Nigerian government?",
+    options: [
+        "(A) Certificate of Incorporation",
+        "(B) NAFDAC registration",
+        "(C) Tax Identification Number (TIN)",
+        "(D) Address verification"
+    ],
+    answer: 0
+  },
+  {
+    question: "Q178: Which type of business requires registration with NAFDAC before operation in Nigeria?",
+    options: [
+        "(A) Manufacturing companies",
+        "(B) Retailers",
+        "(C) Food and drug businesses",
+        "(D) Service-based companies"
+    ],
+    answer: 2
+  },
+  {
+    question: "Q179: In Nigeria, what is the minimum capital requirement for setting up a small business as a limited liability company?",
+    options: [
+        "(A) ₦50,000",
+        "(B) ₦100,000",
+        "(C) ₦1,000,000",
+        "(D) There is no minimum capital requirement"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q180: Which of the following is a common challenge faced by small business owners in Nigeria?",
+    options: [
+        "(A) High tax rates",
+        "(B) Inadequate access to finance",
+        "(C) Poor infrastructure",
+        "(D) All of the above"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q181: What is the primary purpose of a feasibility study?",
+    options: [
+        "(A) To assess the profitability of a business idea",
+        "(B) To identify potential risks of a project",
+        "(C) To evaluate the market demand for a product",
+        "(D) All of the above"
+    ],
+    answer: 3
+  },
+  {
+    question: "Q182: Which of the following is NOT typically included in a business plan?",
+    options: [
+        "(A) Market analysis",
+        "(B) Financial projections",
+        "(C) Company ownership structure",
+        "(D) Marketing strategies"
+    ],
+    answer: 2
+  },
+  {
+  question: "Q183: A business plan is essential for:",
+  options: [
+    "(A) Starting a business",
+    "(B) Acquiring funding from investors or banks",
+    "(C) Defining the operational strategy",
+    "(D) All of the above"
+  ],
+  answer: 3
+},
+{
+  question: "Q184: What is the first step in conducting a feasibility study?",
+  options: [
+    "(A) Market analysis",
+    "(B) Financial analysis",
+    "(C) Identifying the problem or opportunity",
+    "(D) Developing a project timeline"
+  ],
+  answer: 2
+},
+{
+  question: "Q185: In a feasibility study, technical feasibility refers to:",
+  options: [
+    "(A) The potential market demand for the product",
+    "(B) The ability to create the product or service with existing technology",
+    "(C) The financial returns of the project",
+    "(D) The legal requirements of the project"
+  ],
+  answer: 1
+},
+{
+  question: "Q186: Which section of a business plan describes how the business will make money?",
+  options: [
+    "(A) Executive Summary",
+    "(B) Business Model",
+    "(C) Market Analysis",
+    "(D) Financial Plan"
+  ],
+  answer: 1
+},
+{
+  question: "Q187: A break-even analysis is used to determine:",
+  options: [
+    "(A) The minimum sales needed to cover costs",
+    "(B) The maximum potential profit",
+    "(C) The cost of developing a product",
+    "(D) The price to charge customers"
+  ],
+  answer: 0
+},
+{
+  question: "Q188: Which of the following is an example of market feasibility?",
+  options: [
+    "(A) Determining if the product can be manufactured using existing technology",
+    "(B) Analyzing the potential customer base and market demand",
+    "(C) Estimating the financial requirements of the project",
+    "(D) Assessing the environmental impact of the project"
+  ],
+  answer: 1
+},
+{
+  question: "Q189: The executive summary of a business plan:",
+  options: [
+    "(A) Provides a detailed description of the business",
+    "(B) Summarizes the key points of the plan for potential investors",
+    "(C) Lists the target market and competitors",
+    "(D) Explains the business's legal structure"
+  ],
+  answer: 1
+},
+{
+  question: "Q190: Which of the following is NOT a common risk factor in feasibility studies?",
+  options: [
+    "(A) Technological limitations",
+    "(B) Legal and regulatory compliance",
+    "(C) Political stability",
+    "(D) Brand recognition"
+  ],
+  answer: 3
+},
+{
+  question: "Q191: Expected financial projection in a business plan typically includes:",
+  options: [
+    "(A) Market research",
+    "(B) Expected income and expenses",
+    "(C) Product design plans",
+    "(D) Employee roles and responsibilities"
+  ],
+  answer: 1
+},
+{
+  question: "Q192: What is market analysis used for in a business plan?",
+  options: [
+    "(A) To evaluate the target audience and competition",
+    "(B) To determine the legal structure of the business",
+    "(C) To assess the financial feasibility of the business",
+    "(D) To outline the management structure"
+  ],
+  answer: 0
+},
+{
+  question: "Q193: Which type of feasibility refers to assessing if the business idea can be profitable?",
+  options: [
+    "(A) Financial feasibility",
+    "(B) Market feasibility",
+    "(C) Technical feasibility",
+    "(D) Organizational feasibility"
+  ],
+  answer: 0
+},
+{
+  question: "Q194: A business model in a business plan defines:",
+  options: [
+    "(A) The company's goals",
+    "(B) How the business will operate and generate revenue",
+    "(C) The target market and competition",
+    "(D) The company's legal structure"
+  ],
+  answer: 1
+},
+{
+  question: "Q195: The SWOT analysis in a business plan is used to identify:",
+  options: [
+    "(A) Strengths, Weaknesses, Opportunities, and Threats",
+    "(B) Sales, Workers, Owners, and Target market",
+    "(C) Suppliers, Workload, Output, and Trends",
+    "(D) None of the above"
+  ],
+  answer: 0
+},
+{
+  question: "Q196: Which of the following is true about financial feasibility?",
+  options: [
+    "(A) It helps in determining if the business can afford to pay its expenses",
+    "(B) It only considers fixed costs",
+    "(C) It only looks at the revenue projections",
+    "(D) It is irrelevant to a business plan"
+  ],
+  answer: 0
+},
+  {
+  question: "Q197: Which of the following is NOT typically part of a business plan's market analysis?",
+  options: [
+    "(A) Target market demographics",
+    "(B) Competitor analysis",
+    "(C) Sales forecasting",
+    "(D) Legal requirements"
+  ],
+  answer: 3
+},
+{
+  question: "Q198: What is organizational feasibility in a business plan?",
+  options: [
+    "(A) Assessing whether the business can be managed with available resources",
+    "(B) Examining whether the market is large enough",
+    "(C) Analyzing the product's profitability",
+    "(D) Identifying the technology needed to run the business"
+  ],
+  answer: 0
+},
+{
+  question: "Q199: Risk analysis in a feasibility study helps identify:",
+  options: [
+    "(A) The potential for success or failure of the project",
+    "(B) The total investment required",
+    "(C) The business's target customers",
+    "(D) The organizational structure of the business"
+  ],
+  answer: 0
+},
+{
+  question: "Q200: A cash flow statement in a business plan is used to:",
+  options: [
+    "(A) Predict the future growth of the business",
+    "(B) Track the business's revenue and expenses",
+    "(C) Identify the business's potential customers",
+    "(D) Calculate the market share"
+  ],
+  answer: 1
+},
+{
+  question: "Q201: What is a major challenge faced by entrepreneurs in Nigeria?",
+  options: [
+    "(A) Access to capital",
+    "(B) Lack of innovation",
+    "(C) High competition",
+    "(D) Low demand for products"
+  ],
+  answer: 0
+},
+{
+  question: "Q202: Which of the following is a common barrier to entrepreneurship in Africa?",
+  options: [
+    "(A) Limited technological infrastructure",
+    "(B) High levels of education",
+    "(C) Government support",
+    "(D) Availability of skilled labor"
+  ],
+  answer: 0
+},
+{
+  question: "Q203: What role does technology play in contemporary entrepreneurship?",
+  options: [
+    "(A) It increases the cost of doing business",
+    "(B) It limits global market access",
+    "(C) It provides new opportunities for scaling businesses",
+    "(D) It reduces the need for innovation"
+  ],
+  answer: 2
+},
+{
+  question: "Q204: Which factor is critical to the success of startups in emerging markets like Nigeria?",
+  options: [
+    "(A) Large government grants",
+    "(B) Access to international markets",
+    "(C) Networking and mentorship",
+    "(D) Absence of competition"
+  ],
+  answer: 2
+},
+{
+  question: "Q205: What is one of the main reasons why many Nigerian entrepreneurs fail?",
+  options: [
+    "(A) Poor financial management",
+    "(B) Excessive innovation",
+    "(C) Overinvestment in technology",
+    "(D) Strong competition from international brands"
+  ],
+  answer: 0
+},
+{
+  question: "Q206: Which African country is known for fostering a high number of tech-based startups?",
+  options: [
+    "(A) Kenya",
+    "(B) Nigeria",
+    "(C) South Africa",
+    "(D) Egypt"
+  ],
+  answer: 0
+},
+{
+  question: "Q207: In the context of global entrepreneurship, what does 'crowdfunding' refer to?",
+  options: [
+    "(A) A type of government loan for businesses",
+    "(B) A method of raising capital through small contributions from many people",
+    "(C) An international grant system",
+    "(D) A business model based on pre-selling products"
+  ],
+  answer: 1
+},
+{
+  question: "Q208: Which of these challenges is most significant for entrepreneurs in Africa?",
+  options: [
+    "(A) Political instability",
+    "(B) Abundance of raw materials",
+    "(C) Lack of consumer demand",
+    "(D) Overdeveloped infrastructure"
+  ],
+  answer: 0
+},
+{
+  question: "Q209: What is the impact of a weak intellectual property system on entrepreneurship in developing countries?",
+  options: [
+    "(A) Encourages innovation",
+    "(B) Promotes imitation over original ideas",
+    "(C) Protects local entrepreneurs' ideas",
+    "(D) Attracts foreign investors"
+  ],
+  answer: 1
+},
+  {
+  question: "Q210: Which of the following is a key feature of the entrepreneurial ecosystem in the world's most developed economies?",
+  options: [
+    "(A) High barriers to entry",
+    "(B) Low levels of regulatory support",
+    "(C) Strong access to venture capital",
+    "(D) Limited government involvement in innovation"
+  ],
+  answer: 2
+},
+{
+  question: "Q211: In the context of Nigerian entrepreneurship, what does the term 'japa' refer to?",
+  options: [
+    "(A) Business growth strategy",
+    "(B) The exodus of skilled workers abroad",
+    "(C) A local business financing method",
+    "(D) A government entrepreneurship program"
+  ],
+  answer: 1
+},
+{
+  question: "Q212: Which of these is a primary factor influencing entrepreneurial activity in global markets today?",
+  options: [
+    "(A) Decreased global trade regulations",
+    "(B) High cost of technological innovation",
+    "(C) Increasing focus on sustainability and social impact",
+    "(D) Diminished need for international partnerships"
+  ],
+  answer: 2
+},
+{
+  question: "Q213: How does the rise of digital platforms affect entrepreneurship in Africa?",
+  options: [
+    "(A) It limits market access for local entrepreneurs",
+    "(B) It encourages local entrepreneurs to only target regional customers",
+    "(C) It enables easier access to global markets and customers",
+    "(D) It increases dependency on government funding"
+  ],
+  answer: 2
+},
+{
+  question: "Q214: Which is a common obstacle faced by Nigerian entrepreneurs when seeking funding?",
+  options: [
+    "(A) Availability of local investors",
+    "(B) High interest rates and difficult access to loans",
+    "(C) Support from venture capitalists",
+    "(D) Low taxation on businesses"
+  ],
+  answer: 1
+},
+{
+  question: "Q215: What is the role of entrepreneurship in driving economic development in Africa?",
+  options: [
+    "(A) It mostly leads to unemployment",
+    "(B) It helps diversify economies and reduces poverty",
+    "(C) It contributes only to local market growth",
+    "(D) It promotes the dominance of multinational companies"
+  ],
+  answer: 1
+},
+{
+  question: "Q216: Which of the following is an example of a social entrepreneurship initiative in Africa?",
+  options: [
+    "(A) A technology startup targeting global markets",
+    "(B) A business selling luxury goods",
+    "(C) A microfinance project aimed at empowering rural communities",
+    "(D) A multinational corporation expanding into African countries"
+  ],
+  answer: 2
+},
+{
+  question: "Q217: What is the impact of inadequate infrastructure on entrepreneurship in Nigeria?",
+  options: [
+    "(A) It enhances efficiency in production",
+    "(B) It hinders the transportation of goods and services",
+    "(C) It increases access to global trade",
+    "(D) It reduces operational costs for businesses"
+  ],
+  answer: 1
+},
+{
+  question: "Q218: What does 'disruptive innovation' mean in the context of global entrepreneurship?",
+  options: [
+    "(A) Improving existing products to make them more expensive",
+    "(B) Creating new markets by transforming existing industries or business models",
+    "(C) Maintaining traditional production",
+    "(D) Focusing on small-scale production rather than mass production"
+  ],
+  answer: 1
+},
+{
+  question: "Q219: Which of the following is a recent trend in the entrepreneurship landscape in Nigeria?",
+  options: [
+    "(A) Declining interest in technology startups",
+    "(B) A rise in digital marketing and e-commerce ventures",
+    "(C) Strong growth in large-scale manufacturing businesses",
+    "(D) A decrease in youth participation in entrepreneurial activities"
+  ],
+  answer: 1
+},
+{
+  question: "Q220: What is the primary advantage of entrepreneurship in developing nations such as Nigeria?",
+  options: [
+    "(A) Low operating costs",
+    "(B) Lack of competition from foreign businesses",
+    "(C) High access to government funds",
+    "(D) Increased market opportunities and consumer demand"
+  ],
+  answer: 3
+},
+  {
+  question: "Q221: Who is the founder of Rose of Sharon Group and a prominent Nigerian businesswoman?",
+  options: [
+    "(A) Ngozi Okonjo-Iweala",
+    "(B) Folorunsho Alakija",
+    "(C) Uche Pedro",
+    "(D) Tokunboh Akintoye"
+  ],
+  answer: 1
+},
+{
+  question: "Q222: Which Nigerian woman is the first female Director-General of the World Trade Organization (WTO)?",
+  options: [
+    "(A) Pamela Adie",
+    "(B) Chimamanda Ngozi Adichie",
+    "(C) Ngozi Okonjo-Iweala",
+    "(D) Sim Shagaya"
+  ],
+  answer: 2
+},
+{
+  question: "Q223: Who is the founder of the popular e-commerce platform, Konga.com?",
+  options: [
+    "(A) Oluwatobiloba Adebayo",
+    "(B) Tokunboh Akintoye",
+    "(C) Sim Shagaya",
+    "(D) Uche Pedro"
+  ],
+  answer: 2
+},
+{
+  question: "Q224: Which of these entrepreneurs is a well-known advocate for women's empowerment and economic development in Nigeria?",
+  options: [
+    "(A) Ngozi Okonjo-Iweala",
+    "(B) Pamela Adie",
+    "(C) Chimamanda Ngozi Adichie",
+    "(D) Folorunsho Alakija"
+  ],
+  answer: 3
+},
+{
+  question: "Q225: Who founded BellaNaija, one of Nigeria's leading lifestyle and entertainment platforms?",
+  options: [
+    "(A) Uche Pedro",
+    "(B) Chimamanda Ngozi Adichie",
+    "(C) Sim Shagaya",
+    "(D) Pamela Adie"
+  ],
+  answer: 0
+},
+{
+  question: "Q226: Which Nigerian entrepreneur is known for her work in the fashion industry and is one of Africa's richest women?",
+  options: [
+    "(A) Folorunsho Alakija",
+    "(B) Tokunboh Akintoye",
+    "(C) Ngozi Okonjo-Iweala",
+    "(D) Uche Pedro"
+  ],
+  answer: 0
+},
+{
+  question: "Q227: Which Nigerian youth entrepreneur is known for digital marketing and business consultancy?",
+  options: [
+    "(A) Oluwatobiloba Adebayo",
+    "(B) Tokunboh Akintoye",
+    "(C) Sim Shagaya",
+    "(D) Pamela Adie"
+  ],
+  answer: 0
+},
+{
+  question: "Q228: What is the focus of Pamela Adie's organization, The Black Mamba?",
+  options: [
+    "(A) Digital marketing",
+    "(B) Fashion",
+    "(C) Women's empowerment",
+    "(D) E-commerce"
+  ],
+  answer: 2
+},
+{
+  question: "Q229: What platform was created by Uche Pedro to cover Nigerian lifestyle and entertainment?",
+  options: [
+    "(A) Konga.com",
+    "(B) BellaNaija",
+    "(C) The Hair Therapy",
+    "(D) Rose of Sharon Group"
+  ],
+  answer: 1
+},
+{
+  question: "Q230: Which Nigerian entrepreneur is known for her hair care brand, The Hair Therapy?",
+  options: [
+    "(A) Folorunsho Alakija",
+    "(B) Tokunboh Akintoye",
+    "(C) Sim Shagaya",
+    "(D) Oluwatobiloba Adebayo"
+  ],
+  answer: 3
+},
+{
+  question: "Q231: Who among these entrepreneurs is an advocate for women's rights and promotes female leadership?",
+  options: [
+    "(A) Sim Shagaya",
+    "(B) Chimamanda Ngozi Adichie",
+    "(C) Uche Pedro",
+    "(D) Oluwatobiloba Adebayo"
+  ],
+  answer: 1
+},
+{
+  question: "Q232: Who was the first female Finance Minister of Nigeria?",
+  options: [
+    "(A) Ngozi Okonjo-Iweala",
+    "(B) Folorunsho Alakija",
+    "(C) Pamela Adie",
+    "(D) Tokunboh Akintoye"
+  ],
+  answer: 0
+},
+{
+  question: "Q233: Which entrepreneur is known for pioneering Nigeria's online shopping culture?",
+  options: [
+    "(A) Sim Shagaya",
+    "(B) Uche Pedro",
+    "(C) Ngozi Okonjo-Iweala",
+    "(D) Oluwatobiloba Adebayo"
+  ],
+  answer: 0
+},
+{
+  question: "Q234: Who is the Nigerian entrepreneur known for promoting digital entrepreneurship in Africa?",
+  options: [
+    "(A) Folorunsho Alakija",
+    "(B) Sim Shagaya",
+    "(C) Tokunboh Akintoye",
+    "(D) Uche Pedro"
+  ],
+  answer: 1
+},
+{
+  question: "Q235: Which of these Nigerian entrepreneurs is also an author and an advocate for female empowerment?",
+  options: [
+    "(A) Pamela Adie",
+    "(B) Chimamanda Ngozi Adichie",
+    "(C) Tokunboh Akintoye",
+    "(D) Sim Shagaya"
+  ],
+  answer: 1
+},
+  {
+  question: "Q236: Who founded the Rose of Sharon Group, a conglomerate that includes oil, fashion, and real estate?",
+  options: [
+    "(A) Ngozi Okonjo-Iweala",
+    "(B) Folorunsho Alakija",
+    "(C) Uche Pedro",
+    "(D) Pamela Adie"
+  ],
+  answer: 1
+},
+{
+  question: "Q237: Who among the following was instrumental in setting up a major Nigerian online retail business?",
+  options: [
+    "(A) Chimamanda Ngozi Adichie",
+    "(B) Sim Shagaya",
+    "(C) Tokunboh Akintoye",
+    "(D) Oluwatobiloba Adebayo"
+  ],
+  answer: 1
+},
+{
+  question: "Q238: Which Nigerian entrepreneur has contributed significantly to global trade and development through her role at the WTO?",
+  options: [
+    "(A) Ngozi Okonjo-Iweala",
+    "(B) Folorunsho Alakija",
+    "(C) Uche Pedro",
+    "(D) Sim Shagaya"
+  ],
+  answer: 0
+},
+{
+  question: "Q239: Who among these entrepreneurs is an advocate for youth innovation and digital transformation in business?",
+  options: [
+    "(A) Sim Shagaya",
+    "(B) Pamela Adie",
+    "(C) Oluwatobiloba Adebayo",
+    "(D) Chimamanda Ngozi Adichie"
+  ],
+  answer: 2
+},
+{
+  question: "Q240: Who among the following Nigerian women entrepreneurs has significantly impacted the oil sector?",
+  options: [
+    "(A) Ngozi Okonjo-Iweala",
+    "(B) Folorunsho Alakija",
+    "(C) Uche Pedro",
+    "(D) Tokunboh Akintoye"
+  ],
+  answer: 1
+},
+{
+  question: "Q241: Which of the following is a major government agency responsible for promoting entrepreneurship in Nigeria?",
+  options: [
+    "(A) National Agency for Food and Drug Administration (NAFDAC)",
+    "(B) Small and Medium Enterprises Development Agency of Nigeria (SMEDAN)",
+    "(C) Central Bank of Nigeria (CBN)",
+    "(D) National Bureau of Statistics (NBS)"
+  ],
+  answer: 1
+},
+{
+  question: "Q242: What is the primary goal of the National Directorate of Employment (NDE)?",
+  options: [
+    "(A) Provide loans to startups",
+    "(B) Promote skill acquisition and entrepreneurship development",
+    "(C) Regulate financial institutions",
+    "(D) Facilitate international trade"
+  ],
+  answer: 1
+},
+{
+  question: "Q243: Which Nigerian institution offers the Youth Entrepreneurship Support (YES) Programme?",
+  options: [
+    "(A) Bank of Industry (BOI)",
+    "(B) Nigerian Investment Promotion Commission (NIPC)",
+    "(C) Central Bank of Nigeria (CBN)",
+    "(D) National Youth Service Corps (NYSC)"
+  ],
+  answer: 0
+},
+{
+  question: "Q244: What is the primary purpose of SMEDAN's initiatives?",
+  options: [
+    "(A) To provide grants to large corporations",
+    "(B) To support the growth of micro, small, and medium enterprises (MSMEs)",
+    "(C) To control inflation",
+    "(D) To monitor government expenditure"
+  ],
+  answer: 1
+},
+{
+  question: "Q245: Which of the following is an example of a private sector entrepreneurial support institution in Nigeria?",
+  options: [
+    "(A) National Youth Service Corps (NYSC)",
+    "(B) Bank of Industry (BOI)",
+    "(C) Federal Ministry of Finance",
+    "(D) Nigerian Police Force"
+  ],
+  answer: 1
+},
+{
+  question: "Q246: The Bank of Industry (BOI) is known for providing which of the following?",
+  options: [
+    "(A) Grants to non-profit organizations",
+    "(B) Financial and technical support to SMEs and entrepreneurs",
+    "(C) Loan forgiveness programs for farmers",
+    "(D) Subsidies for multinational corporations"
+  ],
+  answer: 1
+},
+{
+  question: "Q247: Which program is designed to empower Nigerian youths through funding and capacity-building for entrepreneurial ventures?",
+  options: [
+    "(A) Graduate Entrepreneurship Scheme (GES)",
+    "(B) National Enterprise Development Programme (NEDEP)",
+    "(C) National Youth Service Corps (NYSC)",
+    "(D) National Directorate of Employment (NDE)"
+  ],
+  answer: 1
+},
+{
+  question: "Q248: Which of the following is NOT a primary component of the Nigerian Entrepreneurial Support Ecosystem?",
+  options: [
+    "(A) Training and development programs",
+    "(B) Government-backed grants",
+    "(C) Networking and mentoring opportunities",
+    "(D) Regulatory control of foreign investments"
+  ],
+  answer: 3
+},
+{
+  question: "Q249: Which Nigerian state is home to the Nigerian Export-Import Bank (NEXIM)?",
+  options: [
+    "(A) Lagos",
+    "(B) Abuja",
+    "(C) Kano",
+    "(D) Port Harcourt"
+  ],
+  answer: 1
+},
+{
+  question: "Q250: What does the YouWIN programme primarily focus on?",
+  options: [
+    "(A) Financing large-scale infrastructure projects",
+    "(B) Supporting young entrepreneurs with training, mentoring, and grants",
+    "(C) Providing business loans to foreign investors",
+    "(D) Monitoring environmental sustainability"
+  ],
+  answer: 1
+},
+{
+  question: "Q251: Which agency is responsible for providing financial assistance to Nigerian entrepreneurs through the provision of venture capital?",
+  options: [
+    "(A) Bank of Industry (BOI)",
+    "(B) Federal Ministry of Industry, Trade and Investment",
+    "(C) Nigerian Investment Promotion Commission (NIPC)",
+    "(D) National Economic Reconstruction Fund (NERFUND)"
+  ],
+  answer: 0
+},
+{
+  question: "Q252: The main objective of the National Enterprise Development Programme (NEDEP) is to:",
+  options: [
+    "(A) Regulate business activities in Nigeria",
+    "(B) Facilitate the international trade of Nigerian goods",
+    "(C) Support the creation of new businesses and the development of existing ones",
+    "(D) Provide loans to international corporations"
+  ],
+  answer: 2
+},
+{
+  question: "Q253: Which of the following Nigerian institutions focuses on providing grants to micro and small enterprises?",
+  options: [
+    "(A) Nigerian Investment Promotion Commission (NIPC)",
+    "(B) Bank of Industry (BOI)",
+    "(C) Small and Medium Enterprises Development Agency of Nigeria (SMEDAN)",
+    "(D) Nigerian Export-Import Bank (NEXIM)"
+  ],
+  answer: 2
+},
+{
+  question: "Q254: Which entrepreneurship support program targets Nigerian students and recent graduates?",
+  options: [
+    "(A) Graduate Entrepreneurship Scheme (GES)",
+    "(B) National Youth Service Corps (NYSC)",
+    "(C) Enterprise Development Fund (EDF)",
+    "(D) Youth Enterprise with Innovation in Nigeria (YouWIN)"
+  ],
+  answer: 0
+},
+{
+  question: "Q255: Which Nigerian program offers training, mentoring, and financial support to young entrepreneurs in the agricultural sector?",
+  options: [
+    "(A) Youth Empowerment and Development Programme (YEDP)",
+    "(B) Youth Agricultural Entrepreneurs Programme (YAEP)",
+    "(C) Youth Enterprise with Innovation in Nigeria (YouWIN)",
+    "(D) National Agricultural Development Programme (NADP)"
+  ],
+  answer: 1
+},
+{
+  question: "Q256: What is the role of the National Youth Service Corps (NYSC) in entrepreneurial support in Nigeria?",
+  options: [
+    "(A) Funding startups in the health sector",
+    "(B) Facilitating the development of entrepreneurship through the NYSC Skill Acquisition and Entrepreneurship Development (SAED) programme",
+    "(C) Regulating foreign investments",
+    "(D) Implementing national economic policies"
+  ],
+  answer: 1
+},
+{
+  question: "Q257: The Nigerian Investment Promotion Commission (NIPC) is tasked with:",
+  options: [
+    "(A) Promoting local and foreign investments in Nigeria",
+    "(B) Supporting youth entrepreneurship only in Lagos",
+    "(C) Providing loans to registered farmers",
+    "(D) Managing unemployment schemes"
+  ],
+  answer: 0
+},
+{
+  question: "Q258: Which of the following is a key feature of the Bank of Industry's (BOI) entrepreneurial support services?",
+  options: [
+    "(A) Provision of scholarships for international study",
+    "(B) Direct grants to youth-led businesses",
+    "(C) Offering financial assistance, advisory services, and technical support to SMEs",
+    "(D) Organizing trade fairs for foreign enterprises"
+  ],
+  answer: 2
+},
+{
+  question: "Q259: Which of the following is a direct benefit of entrepreneurial support programs in Nigeria?",
+  options: [
+    "(A) Reduction of corporate taxes for large companies",
+    "(B) Creation of job opportunities and economic growth through SME development",
+    "(C) Regulation of multinational corporations",
+    "(D) Increased import of goods from international markets"
+  ],
+  answer: 1
+},
+{
+  question: "Q260: The Nigerian government's National Policy on MSMEs aims to:",
+  options: [
+    "(A) Increase the number of foreign investments in Nigeria",
+    "(B) Support the development and growth of micro, small, and medium enterprises",
+    "(C) Establish large-scale factories in all Nigerian states",
+    "(D) Restrict the growth of informal businesses"
+  ],
+  answer: 1
+},
+  {
+  question: "Q261: Who developed this CBT quiz based on the GES workbook?",
+  options: [
+    "(A) Hanson Solomon Michael",
+    "(B) Michael Jackson",
+    "(C) Michael Jordan",
+    "(D) Zubby Michael"
+  ],
+  answer: 0
+},
+  {
+    question: "Q262: The National Orientation Agency was established to replace which of the following?",
+    options: ["(A) MAMSER", "(B) NAFDAC", "(C) NYSC", "(D) NDLEA"],
+    answer: 0
+  },
+  {
+    question: "Q263: What does MAMSER stand for?",
+    options: ["(A) Mass Mobilization for Social and Economic Rights", "(B) Mass Mobilization for Self Reliance, Social Justice and Economic Recovery", "(C) Mobilization Against Social and Economic Recession", "(D) Ministry for Agricultural and Social Empowerment"],
+    answer: 1
+  },
+  {
+    question: "Q264: Which of the following is NOT a function of the National Orientation Agency?",
+    options: ["(A) Promoting patriotism and national unity", "(B) Enforcing criminal laws", "(C) Disseminating government policies", "(D) Educating the public on civic responsibilities"],
+    answer: 1
+  },
+  {
+    question: "Q265: The motto of the National Orientation Agency is:",
+    options: ["(A) Justice, Unity and Peace", "(B) Patriotism, Integrity and National Service", "(C) Do the Right Thing", "(D) Nigeria First"],
+    answer: 2
+  },
+  {
+    question: "Q266: Who appoints the Director-General of the National Orientation Agency?",
+    options: ["(A) Senate", "(B) Minister of Information", "(C) President of Nigeria", "(D) National Assembly"],
+    answer: 2
+  },
+  {
+    question: "Q267: Which government ministry supervises the National Orientation Agency?",
+    options: ["(A) Ministry of Youth and Sports", "(B) Ministry of Education", "(C) Ministry of Information and National Orientation", "(D) Ministry of Internal Affairs"],
+    answer: 2
+  },
+  {
+    question: "Q268: Which of the following best describes one of NOA’s core responsibilities?",
+    options: ["(A) Conducting military recruitment", "(B) Educating citizens on electoral processes", "(C) Collecting taxes", "(D) Issuing business licenses"],
+    answer: 1
+  },
+  {
+    question: "Q269: One of the key campaigns of the NOA is called:",
+    options: ["(A) Not Too Young to Run", "(B) Do the Right Thing", "(C) Green Nigeria", "(D) Vote Right"],
+    answer: 1
+  },
+  {
+    question: "Q270: The headquarters of the National Orientation Agency is located in which Nigerian city?",
+    options: ["(A) Lagos", "(B) Enugu", "(C) Abuja", "(D) Kaduna"],
+    answer: 2
+  },
+  {
+    question: "Q271: Who launched the Operation Feed the Nation program?",
+    options: ["(A) General Yakubu Gowon", "(B) General Olusegun Obasanjo", "(C) Shehu Shagari", "(D) Murtala Mohammed"],
+    answer: 1
+  },
+  {
+    question: "Q272: What was the major aim of OFN?",
+    options: ["(A) Eradicate corruption", "(B) Improve literacy", "(C) Increase food production", "(D) Promote industrialization"],
+    answer: 2
+  },
+  {
+    question: "Q273: What was a major limitation of the Green Revolution?",
+    options: ["(A) Excessive imports", "(B) Poor implementation and corruption", "(C) Lack of military support", "(D) Natural disasters"],
+    answer: 1
+  },
+  {
+    question: "Q274: Green Revolution focused on...",
+    options: ["(A) Military expansion", "(B) Urban renewal", "(C) Agricultural self-sufficiency", "(D) Education reform"],
+    answer: 2
+  },
+  {
+    question: "Q275: WAI emphasized all EXCEPT...",
+    options: ["(A) Orderliness", "(B) Patriotism", "(C) Bribery", "(D) Discipline"],
+    answer: 2
+  },
+  {
+    question: "Q276: WAIC was introduced by...",
+    options: ["(A) Buhari/Idiagbon", "(B) Obasanjo", "(C) Abacha", "(D) Babangida"],
+    answer: 1
+  },
+  {
+    question: "Q277: MAMSER was launched in what year?",
+    options: ["(A) 1983", "(B) 1985", "(C) 1987", "(D) 1989"],
+    answer: 2
+  },
+  {
+    question: "Q278: The MAMSER programme was established under which regime?",
+    options: ["(A) Shehu Shagari", "(B) Muhammadu Buhari", "(C) Ibrahim Babangida", "(D) Sani Abacha"],
+    answer: 2
+  },
+  {
+    question: "Q279: The leader of MAMSER was...",
+    options: ["(A) Jerry Gana", "(B) Dora Akunyili", "(C) Bolaji Akinyemi", "(D) Ibrahim Dasuki"],
+    answer: 0
+  },
+  {
+    question: "Q280: Which of the following was not emphasized by WAI?",
+    options: ["(A) Loyalty", "(B) Discipline", "(C) Accountability", "(D) Foreign investment"],
+    answer: 3
+  },
+  {
+    question: "Q281: Who is the current President of Nigeria as of 2025?",
+    options: ["(A) Muhammadu Buhari", "(B) Bola Ahmed Tinubu", "(C) Goodluck Jonathan", "(D) Atiku Abubakar"],
+    answer: 1
+  },
+  {
+    question: "Q282: Which political party is currently in power at the federal level in Nigeria?",
+    options: ["(A) PDP", "(B) LP", "(C) APC", "(D) SDP"],
+    answer: 2
+  },
+  {
+    question: "Q283: Who is the current Senate President of Nigeria?",
+    options: ["(A) Ahmed Lawan", "(B) Godswill Akpabio", "(C) Orji Uzor Kalu", "(D) David Mark"],
+    answer: 1
+  },
+  {
+    question: "Q284: What is the name of the student loan act signed into law in 2023?",
+    options: ["(A) National Education Bill", "(B) Student Support Act", "(C) Student Loan Act", "(D) Nigerian Tertiary Education Fund Act"],
+    answer: 2
+  },
+  {
+    question: "Q285: Which region in Nigeria recently witnessed renewed agitation for Biafra?",
+    options: ["(A) South-South", "(B) North-East", "(C) South-East", "(D) North-Central"],
+    answer: 2
+  },
+  {
+    question: "Q286: The removal of fuel subsidy in 2023 led to which of the following?",
+    options: ["(A) Decrease in transportation cost", "(B) Inflation and protests", "(C) Strengthening of the naira", "(D) Decrease in unemployment"],
+    answer: 1
+  },
+  {
+    question: "Q287: Who is the current Minister of the Federal Capital Territory (FCT)?",
+    options: ["(A) Babatunde Fashola", "(B) Nyesom Wike", "(C) Nasir El-Rufai", "(D) Rotimi Amaechi"],
+    answer: 1
+  },
+  {
+    question: "Q288: Which of the following is a major cause of insecurity in Northern Nigeria?",
+    options: ["(A) Oil spillage", "(B) Boko Haram insurgency", "(C) Pirate attacks", "(D) Land use conflict"],
+    answer: 1
+  },
+  {
+    question: "Q289: Nigeria’s 2024 budget is tagged:",
+    options: ["(A) Budget of National Revival", "(B) Budget of Hope", "(C) Budget of Renewed Hope", "(D) Budget of Transformation"],
+    answer: 2
+  },
+  {
+    question: "Q290: The National Assembly is made up of how many chambers?",
+    options: ["(A) One", "(B) Two", "(C) Three", "(D) Four"],
+    answer: 1
+  },
+  {
+    question: "Q291: Which Nigerian music genre has gained massive global popularity in recent years?",
+    options: ["(A) Fuji", "(B) Juju", "(C) Afrobeats", "(D) Highlife"],
+    answer: 2
+  },
+  {
+    question: "Q292: Who won the 2024 Headies Award for Artiste of the Year?",
+    options: ["(A) Burna Boy", "(B) Rema", "(C) Asake", "(D) Davido"],
+    answer: 2
+  },
+  {
+    question: "Q293: Which Nigerian filmmaker’s movie was nominated for the 2024 Oscars?",
+    options: ["(A) Kunle Afolayan", "(B) Mo Abudu", "(C) Genevieve Nnaji", "(D) Kemi Adetiba"],
+    answer: 0
+  },
+  {
+    question: "Q294: Which Nigerian cultural festival attracts global attention in Osun State?",
+    options: ["(A) Argungu Festival", "(B) Eyo Festival", "(C) Osun-Osogbo Festival", "(D) New Yam Festival"],
+    answer: 2
+  },
+  {
+    question: "Q295: What is the official language of Nigeria?",
+    options: ["(A) Hausa", "(B) Yoruba", "(C) Igbo", "(D) English"],
+    answer: 3
+  },
+  {
+    question: "Q296: Which Nigerian fashion event is internationally recognized?",
+    options: ["(A) Lagos Fashion Week", "(B) Abuja Couture Show", "(C) Port Harcourt Runway", "(D) Naija Designers Gala"],
+    answer: 0
+  },
+  {
+    question: "Q297: Which Nigerian was appointed Director-General of the World Trade Organization in 2021 and still holds the position?",
+    options: ["(A) Dora Akunyili", "(B) Ngozi Okonjo-Iweala", "(C) Obiageli Ezekwesili", "(D) Amina Mohammed"],
+    answer: 1
+  },
+  {
+    question: "Q298: The Yoruba traditional worship of ‘Sango’ represents what?",
+    options: ["(A) God of Iron", "(B) God of Water", "(C) God of Thunder", "(D) God of Harvest"],
+    answer: 2
+  },
+  {
+    question: "Q299: Which Nigerian author is known for promoting feminist literature and global advocacy?",
+    options: ["(A) Chimamanda Ngozi Adichie", "(B) Wole Soyinka", "(C) Buchi Emecheta", "(D) Helon Habila"],
+    answer: 0
+  },
+  {
+    question: "Q300: What is the major impact of Nollywood on Nigerian culture?",
+    options: ["(A) Promotes only Western values", "(B) Diminishes traditional beliefs", "(C) Promotes local stories and cultural identity", "(D) Focuses only on politics"],
+    answer: 2
+  }
+];
+
+let questions = [], currentQuestion = 0, userAnswers = [], player = "", firstStart = true, timerInterval;
+
+const passcodeScreen = document.getElementById("passcode-screen");
+const passcodeBtn = document.getElementById("passcode-btn");
+const passcodeError = document.getElementById("passcode-error");
+const introEl = document.getElementById("intro");
+const quizContainer = document.getElementById("quiz-container");
+const quizEl = document.getElementById("quiz");
+const nextBtn = document.getElementById("next-btn");
+const prevBtn = document.getElementById("prev-btn");
+const submitBtn = document.getElementById("submit-btn");
+const resultEl = document.getElementById("result");
+const startBtn = document.getElementById("start-btn");
+const togglePass = document.getElementById("toggle-pass");
+const passInput = document.getElementById("passcode");
+const timerEl = document.getElementById("timer");
+
+introEl.style.display = "none";
+
+// PASSCODE
+passcodeBtn.onclick = () => {
+  if (passInput.value.trim() === "justsayhanson") {
+    passcodeScreen.style.display = "none";
+    introEl.style.display = "block";
+  } else passcodeError.style.display = "block";
+};
+togglePass.onclick = () => {
+  if (passInput.type === "password") { passInput.type="text"; togglePass.innerText="🙈"; }
+  else { passInput.type="password"; togglePass.innerText="👁"; }
+};
+passInput.addEventListener("input",()=>passcodeError.style.display="none");
+
+// START QUIZ
+startBtn.onclick = () => {
+  const nameInput = document.getElementById("playerName").value.trim();
+  if(!nameInput){ alert("Please enter your name."); return; }
+  player = nameInput;
+  questions = pickRandomQuestions(50);
+  userAnswers = Array(questions.length).fill(null);
+  currentQuestion = 0;
+  introEl.style.display="none";
+  quizContainer.style.display="block";
+  if(firstStart){ showWelcome(); firstStart=false; } 
+  else { loadQuestion(); startTimer(30*60); }
+};
+
+function pickRandomQuestions(num=50){
+  const shuffled = [...questionsBank].sort(()=>Math.random()-0.5);
+  return shuffled.slice(0,num);
+}
+
+function showWelcome(){
+  quizEl.innerHTML = `<div style="text-align:center; animation: fadeIn 1s ease;">
+    <h2>🎉 Welcome, ${player}!</h2>
+    <p>Get ready for the GES Entrepreneurship & Business Innovation Study Quiz.</p>
+    <p style="font-style: italic; font-size:14px; margin-top:15px; opacity:0.9;">
+      This experience is brought to you by <strong>Hanson Solomon Michael</strong>.
+    </p>
+    <button id="begin-btn">Start Now 🚀</button>
+  </div>`;
+  prevBtn.style.display="none"; nextBtn.style.display="none"; submitBtn.style.display="none";
+  document.getElementById("begin-btn").onclick = () => { loadQuestion(); startTimer(30*60); nextBtn.style.display="inline-block"; };
+}
+
+function updateProgress(){
+  const percent = Math.round(((currentQuestion+1)/questions.length)*100);
+  const bar = document.getElementById("progress-bar");
+  bar.style.width = percent+"%"; bar.innerText = percent+"%";
+}
+
+function loadQuestion(){
+  const q = questions[currentQuestion];
+  document.getElementById("question-info").innerText = `Question ${currentQuestion+1} of ${questions.length}`;
+  quizEl.innerHTML = `<div class="question">${q.question}</div><div class="options" id="options"></div>`;
+  const optionsEl = document.getElementById("options");
+
+  nextBtn.disabled = userAnswers[currentQuestion] === null;
+  submitBtn.disabled = userAnswers[currentQuestion] === null;
+
+  q.options.forEach((opt,i)=>{
+    const btn = document.createElement("button");
+    btn.className="option"; btn.innerText=opt;
+    if(userAnswers[currentQuestion]===i) btn.classList.add("selected");
+    btn.onclick = ()=>{
+      document.querySelectorAll(".option").forEach(el=>el.classList.remove("selected"));
+      btn.classList.add("selected");
+      userAnswers[currentQuestion]=i;
+      nextBtn.disabled=false;
+      submitBtn.disabled=false;
+    };
+    optionsEl.appendChild(btn);
+  });
+
+  prevBtn.style.display=currentQuestion===0?"none":"inline-block";
+  nextBtn.style.display=currentQuestion===questions.length-1?"none":"inline-block";
+  submitBtn.style.display=currentQuestion===questions.length-1?"inline-block":"none";
+
+  updateProgress();
+}
+
+nextBtn.onclick=()=>{ if(currentQuestion<questions.length-1){ currentQuestion++; loadQuestion(); } };
+prevBtn.onclick=()=>{ if(currentQuestion>0){ currentQuestion--; loadQuestion(); } };
+
+submitBtn.onclick=()=>{
+  clearInterval(timerInterval);
+  let score=0, review="<div class='review'><h3>Review of Wrong Answers:</h3>";
+  userAnswers.forEach((ans,i)=>{
+    if(ans===questions[i].answer) score++;
+    else {
+      review+=`<p><strong>Q${i+1}:</strong> ${questions[i].question}<br>
+      ❌ Your answer: ${ans!==null?questions[i].options[ans]:"No answer"}<br>
+      ✅ Correct answer: ${questions[i].options[questions[i].answer]}</p>`;
+    }
+  });
+  review+="</div>";
+  const percent=Math.round((score/questions.length)*100);
+  let feedback="";
+  if(score===questions.length) feedback=`🌟 Excellent, ${player}! God forbid!!! You too sabi book... You're the G.O.A.T!!! 💪🔥`;
+  else if(score>=questions.length*0.7) feedback=`👏 That's great oh, ${player}! You see that word "Brilliant", na you get am.`;
+  else if(score>=questions.length*0.4) feedback=`👍 Not bad, ${player}. Keep pushing!`;
+  else feedback=`💡 Don't give up, ${player}. Study harder and try again!`;
+
+  resultEl.innerHTML=`
+    <h2>${player}, Score: ${score}/${questions.length} (${percent}%)</h2>
+    <p>${feedback}</p>${review}
+    <button id="restart-btn">Restart Quiz</button>`;
+  quizEl.style.display="none"; nextBtn.style.display="none"; prevBtn.style.display="none"; submitBtn.style.display="none";
+  document.getElementById("restart-btn").onclick=()=>restartQuiz();
+};
+
+function restartQuiz(){
+  questions=pickRandomQuestions(50);
+  userAnswers=Array(questions.length).fill(null);
+  currentQuestion=0;
+  quizEl.style.display="block"; resultEl.innerHTML="";
+  loadQuestion(); nextBtn.style.display="inline-block"; prevBtn.style.display="none"; submitBtn.style.display="none";
+  document.getElementById("progress-bar").style.width="0%"; document.getElementById("progress-bar").innerText="0%";
+  startTimer(30*60);
+}
+
+// ===== TIMER =====
+function startTimer(duration){
+  clearInterval(timerInterval);
+  let time=duration;
+  updateTimerDisplay(time);
+  timerInterval = setInterval(()=>{
+    time--;
+    updateTimerDisplay(time);
+    if(time<=0){
+      clearInterval(timerInterval);
+      alert("⏰ Time's up! The quiz will be submitted automatically.");
+      submitBtn.click();
+    }
+  },1000);
+}
+
+function updateTimerDisplay(time){
+  let mins = Math.floor(time/60);
+  let secs = time % 60;
+  timerEl.innerText = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  if(time<=300){ // 5 min warning
+    timerEl.classList.add("warning");
+  } else {
+    timerEl.classList.remove("warning");
+  }
+}
+</script>
+</body>
+</html>   
